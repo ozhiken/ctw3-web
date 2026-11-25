@@ -20,11 +20,13 @@
   h1{font-size:19px;margin:4px 0 12px;letter-spacing:-.01em}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
         padding:14px;margin-bottom:12px}
-  .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
-       padding:5px 0;border-bottom:1px solid var(--line)}
+  .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+       padding:7px 0;border-bottom:1px solid var(--line)}
+  .row .k{flex:0 0 auto;max-width:42%}
+  .row b{text-align:right;flex:1 1 auto;min-width:0}
   .row:last-child{border-bottom:0}
   .row b{font-weight:600;font-variant-numeric:tabular-nums}
-  .k{color:var(--mut);font-size:14px}
+  .k{color:var(--mut);font-size:14px;line-height:1.3}
   button{font:600 16px/1 inherit;color:#fff;background:var(--accent);border:0;
          border-radius:11px;padding:13px 16px;width:100%;margin:5px 0;
          -webkit-tap-highlight-color:transparent}
@@ -66,13 +68,13 @@
 <div class="card hide" id="statusCard">
   <div class="row"><span class="k">Вода</span><b id="water">—</b></div>
   <div class="gauge"><i id="lvlBar" style="width:0"></i></div>
-  <div class="row"><span class="k">Уровень (сырой канал)</span><b id="lvl">—</b></div>
+  <div class="row"><span class="k">Уровень</span><b id="lvl">—</b></div>
   <div class="row"><span class="k">Режим</span><b id="mode">—</b></div>
-  <div class="row"><span class="k">Питание / пауза</span><b id="pwr">—</b></div>
+  <div class="row"><span class="k">Состояние</span><b id="pwr">—</b></div>
   <div class="row"><span class="k">Помпа</span><b id="pump">—</b></div>
   <div class="row"><span class="k">Фильтр</span><b id="flt">—</b></div>
-  <div class="row"><span class="k">Питание, батарея</span><b id="bat">—</b></div>
-  <div class="row"><span class="k">Неисправность</span><b id="flt2">—</b></div>
+  <div class="row"><span class="k">Напряжение</span><b id="bat">—</b></div>
+  <div class="row"><span class="k">Диагностика</span><b id="flt2">—</b></div>
   <div class="row"><span class="k">isLock</span><b id="lock">—</b></div>
   <button class="sec" id="refresh">Обновить</button>
 </div>
@@ -167,6 +169,11 @@ async function req(cmd,payload=[],ms=12000){
   return p;
 }
 
+function dur(sec){
+  const h=Math.floor(sec/3600), m=Math.round(sec%3600/60);
+  return h? `${h} ч ${m} м` : `${m} м`;
+}
+
 function decodeStatus(p){
   if(p.length<26)return null;
   const s={power:p[0],suspend:p[1],mode:p[2],electric:p[3],dndNow:p[4],fault:p[5],
@@ -192,16 +199,17 @@ function render(s){
     const pct=Math.max(0,Math.min(100,Math.round(100*(LVL_DRY-s.lvl)/(LVL_DRY-LVL_FULL))));
     $('lvlBar').style.width=pct+'%';
     $('lvlBar').style.background=margin<=0?'var(--bad)':(margin<150?'var(--warn)':'var(--ok)');
-    $('lvl').textContent=`${s.lvl} (запас ${margin>=0?'+':''}${margin}, ~${pct}%)`;
+      $('lvl').textContent=`${s.lvl} · запас ${margin>=0?'+':''}${margin} · ${pct}%`;
     $('lvl').className=margin<=0?'bad':(margin<150?'warn':'');
   }
   $('mode').textContent=`${s.mode} — ${MODES[s.mode]||'?'}`;
-  $('pwr').textContent=`${s.power?'вкл':'ВЫКЛ'} / ${s.suspend?'работает':'НА ПАУЗЕ'}`;
-  $('pump').textContent=`всего ${s.pumpRt} с, сегодня ${s.todayRt} с`;
+  $('pwr').textContent=s.power?(s.suspend?'работает':'НА ПАУЗЕ'):'ВЫКЛЮЧЕНА';
+  $('pwr').className=s.power&&s.suspend?'ok':'warn';
+  $('pump').textContent=`${dur(s.todayRt)} сегодня · ${dur(s.pumpRt)} всего`;
   const days=Math.ceil(Math.max(0,Math.min(s.fltPct,100))*30/100);
   $('flt').textContent=`${s.fltPct}% (~${days} дн.)`;
-  $('bat').textContent=`${s.supply} мВ · ${s.battMv} мВ / ${s.battPct}%`
-                        +(s.electric?' (сеть)':' (батарея)');
+  $('bat').textContent=`${(s.supply/1000).toFixed(2)} В сеть · `
+    +`${(s.battMv/1000).toFixed(2)} В ${s.battPct}%`+(s.electric?'':' — БЕЗ СЕТИ');
   $('flt2').textContent=`fault=${s.fault} модуль=${s.module} detect=${s.detect}`;
   $('flt2').className=s.fault||s.module?'bad':'';
   if(s.isLock!==undefined){
