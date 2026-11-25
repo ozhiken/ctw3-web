@@ -3,123 +3,283 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f9f9f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
 <title>PETKIT CTW3UV</title>
 <style>
-  :root{
-    --bg:#f5f6f8; --card:#fff; --ink:#15171a; --mut:#6b7280; --line:#e3e6ea;
-    --ok:#1a7f4b; --warn:#b45309; --bad:#b42318; --accent:#1d4ed8;
+:root{
+  color-scheme: light;
+  --bg:#f9f9f7; --card:#fcfcfb;
+  --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --line:rgba(11,11,11,.10);
+  --series:#2a78d6; --series-wash:rgba(42,120,214,.10);
+  --good:#0ca30c; --warn:#fab219; --crit:#d03b3b;
+  --good-ink:#006300; --crit-ink:#b42318; --warn-ink:#7a5200;
+  --btn:#2a78d6; --btn-ink:#fff;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#0d0d0d; --card:#1a1a19;
+    --ink:#fff; --ink2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --line:rgba(255,255,255,.10);
+    --series:#3987e5; --series-wash:rgba(57,135,229,.14);
+    --good-ink:#0ca30c; --crit-ink:#e66767; --warn-ink:#fab219;
+    --btn:#3987e5;
   }
-  @media (prefers-color-scheme:dark){
-    :root{--bg:#0f1115;--card:#181b21;--ink:#eceef1;--mut:#9aa1ab;--line:#272c34;
-          --ok:#4ade80;--warn:#fbbf24;--bad:#f87171;--accent:#7aa2ff;}
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
-       font:16px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
-       padding:max(12px,env(safe-area-inset-top)) 12px max(24px,env(safe-area-inset-bottom));}
-  h1{font-size:19px;margin:4px 0 12px;letter-spacing:-.01em}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
-        padding:14px;margin-bottom:12px}
-  .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
-       padding:7px 0;border-bottom:1px solid var(--line)}
-  .row .k{flex:0 0 auto;max-width:42%}
-  .row b{text-align:right;flex:1 1 auto;min-width:0}
-  .row:last-child{border-bottom:0}
-  .row b{font-weight:600;font-variant-numeric:tabular-nums}
-  .k{color:var(--mut);font-size:14px;line-height:1.3}
-  button{font:600 16px/1 inherit;color:#fff;background:var(--accent);border:0;
-         border-radius:11px;padding:13px 16px;width:100%;margin:5px 0;
-         -webkit-tap-highlight-color:transparent}
-  button:disabled{opacity:.4}
-  button.sec{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
-  button.danger{background:var(--bad)}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .grid button{margin:0}
-  .gauge{height:10px;border-radius:5px;background:var(--line);overflow:hidden;margin:8px 0 4px}
-  .gauge i{display:block;height:100%;background:var(--ok);transition:width .4s}
-  .ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
-  #log{font:12px/1.5 ui-monospace,Menlo,monospace;color:var(--mut);
-       white-space:pre-wrap;word-break:break-all;max-height:170px;overflow:auto}
-  input{font:16px inherit;width:100%;padding:12px;border:1px solid var(--line);
-        border-radius:11px;background:var(--bg);color:var(--ink)}
-  table{width:100%;border-collapse:collapse;font-size:14px}
-  td{padding:4px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
-  td:last-child{text-align:right;color:var(--mut)}
-  .hide{display:none}
-  .note{font-size:13px;color:var(--mut);margin:6px 0 0}
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#0d0d0d; --card:#1a1a19;
+  --ink:#fff; --ink2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --line:rgba(255,255,255,.10);
+  --series:#3987e5; --series-wash:rgba(57,135,229,.14);
+  --good-ink:#0ca30c; --crit-ink:#e66767; --warn-ink:#fab219;
+  --btn:#3987e5;
+}
+*{box-sizing:border-box}
+html,body{overflow-x:hidden}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;
+  padding:max(10px,env(safe-area-inset-top)) 12px calc(28px + env(safe-area-inset-bottom));
+  max-width:640px;margin-inline:auto;
+}
+h1{font-size:17px;font-weight:650;margin:6px 0 2px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+      padding:16px;margin-bottom:12px}
+.card h2{font-size:13px;font-weight:600;color:var(--ink2);margin:0 0 12px;
+         text-transform:uppercase;letter-spacing:.04em}
+.hide{display:none !important}
+
+/* ---- hero: уровень воды ---- */
+.hero{display:flex;align-items:flex-end;gap:12px;margin-bottom:4px}
+.hero .fig{font-size:52px;line-height:1;font-weight:600;letter-spacing:-.03em}
+.hero .unit{font-size:20px;color:var(--ink2);padding-bottom:5px}
+.hero .state{margin-left:auto;display:flex;align-items:center;gap:7px;
+             padding-bottom:7px;font-size:15px;font-weight:600}
+.dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+.meter{height:12px;border-radius:6px;background:var(--grid);overflow:hidden;margin:12px 0 8px}
+.meter i{display:block;height:100%;border-radius:6px;transition:width .45s ease}
+.hint{font-size:13px;color:var(--ink2);margin:0}
+
+/* ---- плитки ---- */
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 10px}
+.tile .t{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.tile .v{font-size:19px;font-weight:600;margin-top:5px;letter-spacing:-.01em}
+.tile .s{font-size:12px;color:var(--ink2);margin-top:2px}
+
+/* ---- строки ---- */
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+     padding:9px 0;border-bottom:1px solid var(--line);font-size:15px}
+.row:first-of-type{padding-top:0}
+.row:last-child{border-bottom:0;padding-bottom:0}
+.row .k{color:var(--ink2);font-size:14px;flex:0 0 auto;max-width:48%}
+.row .v{font-weight:600;text-align:right;flex:1 1 auto;min-width:0;
+        font-variant-numeric:tabular-nums}
+
+/* ---- управление ---- */
+.ctl{margin-bottom:16px}
+.ctl:last-child{margin-bottom:0}
+.ctl > span{display:block;font-size:13px;color:var(--ink2);margin-bottom:7px}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;font:600 14px/1 inherit;padding:12px 6px;border-radius:11px;
+            border:1px solid var(--line);background:transparent;color:var(--ink);
+            -webkit-tap-highlight-color:transparent}
+.seg button[aria-pressed="true"]{background:var(--btn);border-color:var(--btn);color:var(--btn-ink)}
+.seg button:disabled{opacity:.45}
+button.wide{width:100%;font:600 16px/1 inherit;padding:14px;border-radius:12px;
+            border:0;background:var(--btn);color:var(--btn-ink);margin-top:8px;
+            -webkit-tap-highlight-color:transparent}
+button.ghost{background:transparent;color:var(--btn);border:1.5px solid var(--btn)}
+button.quiet{background:transparent;color:var(--ink2);border:1px solid var(--line)}
+button:disabled{opacity:.45}
+details{margin-top:12px}
+summary{font-size:14px;color:var(--ink2);cursor:pointer;padding:6px 0}
+.danger{color:var(--crit-ink);border-color:var(--crit)}
+
+/* ---- графики ---- */
+figure{margin:0 0 18px}
+figure:last-of-type{margin-bottom:0}
+figcaption{font-size:14px;font-weight:600;margin-bottom:2px}
+.cap{font-size:12px;color:var(--muted);margin-bottom:10px}
+svg{display:block;width:100%;height:auto;overflow:visible;touch-action:pan-y}
+.gl{stroke:var(--grid);stroke-width:1}
+.ax{stroke:var(--axis);stroke-width:1}
+.tick{fill:var(--muted);font-size:10px;font-variant-numeric:tabular-nums}
+.dlab{fill:var(--ink);font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
+.bar{fill:var(--series)}
+.bar.dim{fill:var(--series);opacity:.35}
+.tip{position:fixed;z-index:9;pointer-events:none;background:var(--ink);color:var(--bg);
+     font-size:12px;padding:6px 9px;border-radius:8px;white-space:nowrap;
+     transform:translate(-50%,-130%);opacity:0;transition:opacity .12s}
+.tip.on{opacity:1}
+table{width:100%;border-collapse:collapse;font-size:14px;
+      font-variant-numeric:tabular-nums}
+th{text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;
+   letter-spacing:.04em;font-weight:600;padding-bottom:6px}
+th:last-child,td:last-child{text-align:right}
+td{padding:7px 0;border-bottom:1px solid var(--line);color:var(--ink)}
+tr:last-child td{border-bottom:0}
+
+input{font:16px inherit;width:100%;padding:13px;border:1px solid var(--line);
+      border-radius:12px;background:var(--bg);color:var(--ink)}
+.note{font-size:13px;color:var(--ink2);margin:10px 0 0}
+#log{font:12px/1.55 ui-monospace,Menlo,monospace;color:var(--ink2);
+     white-space:pre-wrap;word-break:break-word;max-height:190px;overflow:auto}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2);
+      border:1px solid var(--line);border-radius:999px;padding:4px 10px}
 </style>
 </head>
 <body>
-<h1>PETKIT CTW3UV — локально</h1>
+
+<h1>PETKIT CTW3UV</h1>
+<p class="sub">Локальное управление по Bluetooth · без облака <span id="chip" class="chip hide"></span></p>
 
 <div class="card" id="connCard">
-  <div class="k">Ключ авторизации (16 hex-символов из <code>~/.petkit_ctw3uv_key</code>)</div>
+  <h2>Подключение</h2>
+  <p class="note" style="margin-top:0">Ключ авторизации — 16 hex-символов из <code>~/.petkit_ctw3uv_key</code>.
+  Хранится только в этом браузере.</p>
   <input id="key" inputmode="latin" autocapitalize="off" autocorrect="off"
          spellcheck="false" placeholder="16 hex-символов, например 0011223344556677">
-  <button id="reconnect" class="hide">Переподключиться (без выбора)</button>
-  <button id="connect">Подключиться к поилке</button>
-  <button id="connectAll" class="sec">Показать все устройства рядом</button>
-  <p class="note">Ключ сохраняется только в этом браузере, на телефоне. Никуда не отправляется.
-  В списке устройств поилка называется <b>Petkit_CTW3UV_100</b>. Если её там нет — нажмите
-  «Показать все устройства рядом»: она не объявляет свой сервис в рекламе, и некоторые
-  браузеры из-за этого её отфильтровывают.</p>
+  <button class="wide" id="connect">Подключиться</button>
+  <button class="wide ghost hide" id="reconnect">Переподключиться без выбора</button>
+  <button class="wide quiet" id="connectAll">Показать все устройства рядом</button>
+  <p class="note">В списке поилка называется <b>Petkit_CTW3UV_100</b>. Свой рабочий сервис она
+  в рекламе не объявляет, поэтому некоторые браузеры прячут её из отфильтрованного списка —
+  тогда помогает кнопка со всеми устройствами.</p>
 </div>
 
-<div class="card hide" id="statusCard">
-  <div class="row"><span class="k">Вода</span><b id="water">—</b></div>
-  <div class="gauge"><i id="lvlBar" style="width:0"></i></div>
-  <div class="row"><span class="k">Уровень</span><b id="lvl">—</b></div>
-  <div class="row"><span class="k">Режим</span><b id="mode">—</b></div>
-  <div class="row"><span class="k">Состояние</span><b id="pwr">—</b></div>
-  <div class="row"><span class="k">Помпа</span><b id="pump">—</b></div>
-  <div class="row"><span class="k">Фильтр</span><b id="flt">—</b></div>
-  <div class="row"><span class="k">Напряжение</span><b id="bat">—</b></div>
-  <div class="row"><span class="k">Диагностика</span><b id="flt2">—</b></div>
-  <div class="row"><span class="k">isLock</span><b id="lock">—</b></div>
-  <button class="sec" id="refresh">Обновить</button>
+<div class="card hide" id="waterCard">
+  <h2>Вода</h2>
+  <div class="hero">
+    <span class="fig" id="lvlPct">—</span><span class="unit">%</span>
+    <span class="state"><i class="dot" id="lvlDot"></i><span id="lvlWord">—</span></span>
+  </div>
+  <div class="meter"><i id="lvlBar" style="width:0"></i></div>
+  <p class="hint" id="lvlHint">—</p>
+</div>
+
+<div class="tiles hide" id="tiles">
+  <div class="tile"><div class="t">Помпа сегодня</div><div class="v" id="tPump">—</div>
+       <div class="s" id="tPumpSub">—</div></div>
+  <div class="tile"><div class="t">Фильтр</div><div class="v" id="tFilter">—</div>
+       <div class="s" id="tFilterSub">—</div></div>
+  <div class="tile"><div class="t">Батарея</div><div class="v" id="tBatt">—</div>
+       <div class="s" id="tBattSub">—</div></div>
+</div>
+
+<div class="card hide" id="stateCard">
+  <h2>Состояние</h2>
+  <div class="row"><span class="k">Режим</span><span class="v" id="sMode">—</span></div>
+  <div class="row"><span class="k">Работа</span><span class="v" id="sRun">—</span></div>
+  <div class="row"><span class="k">Подсветка</span><span class="v" id="sLamp">—</span></div>
+  <div class="row"><span class="k">Не беспокоить</span><span class="v" id="sDnd">—</span></div>
+  <div class="row"><span class="k">Питание</span><span class="v" id="sVolt">—</span></div>
+  <div class="row"><span class="k">Диагностика</span><span class="v" id="sDiag">—</span></div>
+  <button class="wide quiet" id="refresh">Обновить</button>
 </div>
 
 <div class="card hide" id="ctlCard">
-  <div class="k" style="margin-bottom:8px">Управление</div>
-  <div class="grid">
-    <button class="sec" data-act="light:1">Подсветка вкл</button>
-    <button class="sec" data-act="light:0">Подсветка выкл</button>
-    <button class="sec" data-act="bright:1">Яркость 1</button>
-    <button class="sec" data-act="bright:2">Яркость 2</button>
-    <button class="sec" data-act="bright:3">Яркость 3</button>
-    <button class="sec" data-act="dnd:1">Не беспокоить вкл</button>
-    <button class="sec" data-act="dnd:0">Не беспокоить выкл</button>
-    <button class="sec" data-act="mode:1">Режим постоянный</button>
-    <button class="sec" data-act="mode:2">Режим умный</button>
-    <button class="sec" data-act="pause:1">Пауза</button>
-    <button class="sec" data-act="pause:0">Снять паузу</button>
-    <button class="sec" data-act="unlock">Снять isLock</button>
+  <h2>Управление</h2>
+  <div class="ctl"><span>Режим работы</span>
+    <div class="seg" id="segMode">
+      <button data-mode="1">Постоянный</button>
+      <button data-mode="2">Умный</button>
+    </div>
   </div>
-  <button class="danger" data-act="filter">Сбросить счётчик фильтра</button>
-  <p class="note">Каждое действие спрашивает подтверждение, сохраняет прежнюю конфигурацию
-  в журнал ниже и проверяет результат повторным чтением. Команды 73, 83 и 84 не отправляются
-  никогда.</p>
+  <div class="ctl"><span>Помпа</span>
+    <div class="seg" id="segPause">
+      <button data-pause="0">Работает</button>
+      <button data-pause="1">Пауза</button>
+    </div>
+  </div>
+  <div class="ctl"><span>Подсветка</span>
+    <div class="seg" id="segLamp">
+      <button data-lamp="1">Вкл</button>
+      <button data-lamp="0">Выкл</button>
+    </div>
+  </div>
+  <div class="ctl"><span>Яркость</span>
+    <div class="seg" id="segBright">
+      <button data-bright="1">1</button><button data-bright="2">2</button>
+      <button data-bright="3">3</button>
+    </div>
+  </div>
+  <div class="ctl"><span>Не беспокоить</span>
+    <div class="seg" id="segDnd">
+      <button data-dnd="1">Вкл</button>
+      <button data-dnd="0">Выкл</button>
+    </div>
+  </div>
+  <details>
+    <summary>Редкие и необратимые действия</summary>
+    <button class="wide quiet" id="btnUnlock">Снять блокировку isLock</button>
+    <button class="wide quiet danger" id="btnFilter">Сбросить счётчик фильтра</button>
+    <button class="wide quiet danger" id="btnOff">Выключить поилку</button>
+    <p class="note">Каждое действие показывает «было / станет» побайтово, спрашивает
+    подтверждение и проверяет результат повторным чтением. Команды 73, 83 и 84
+    не отправляются никогда.</p>
+  </details>
 </div>
 
 <div class="card hide" id="histCard">
-  <button class="sec" id="hist">Выгрузить историю питья</button>
-  <div id="histOut"></div>
+  <h2>История питья</h2>
+  <div class="tiles" style="margin-bottom:16px">
+    <div class="tile"><div class="t">Сегодня</div><div class="v" id="hToday">—</div>
+         <div class="s">подходов</div></div>
+    <div class="tile"><div class="t">7 дней</div><div class="v" id="hWeek">—</div>
+         <div class="s" id="hWeekSub">—</div></div>
+    <div class="tile"><div class="t">В среднем</div><div class="v" id="hAvg">—</div>
+         <div class="s">за подход</div></div>
+  </div>
+
+  <figure>
+    <figcaption>Подходы по дням</figcaption>
+    <div class="cap" id="capDays">—</div>
+    <div class="seg" id="segRange" style="margin-bottom:12px">
+      <button data-days="14" aria-pressed="true">14 дней</button>
+      <button data-days="30">30 дней</button>
+      <button data-days="0">Всё</button>
+    </div>
+    <svg id="chDays" role="img" aria-label="Количество подходов к поилке по дням"></svg>
+  </figure>
+
+  <figure>
+    <figcaption>Когда пьют</figcaption>
+    <div class="cap">Сумма подходов по часам суток за всё накопленное время</div>
+    <svg id="chHours" role="img" aria-label="Распределение подходов по часам суток"></svg>
+  </figure>
+
+  <details id="tblWrap">
+    <summary>Последние подходы — таблицей</summary>
+    <table><thead><tr><th>Когда</th><th>Сколько пил</th></tr></thead>
+    <tbody id="hTable"></tbody></table>
+  </details>
+
+  <button class="wide ghost" id="hist">Выгрузить из поилки</button>
+  <p class="note">Поилка очищает свой журнал при каждой выгрузке, поэтому записи копятся
+  здесь, в памяти браузера. Чем чаще выгружаете, тем полнее история.</p>
 </div>
 
-<div class="card"><div class="k" style="margin-bottom:6px">Журнал</div><div id="log"></div></div>
+<div class="card"><h2>Журнал</h2><div id="log"></div></div>
+<div class="tip" id="tip"></div>
 
 <script>
 const SVC='0000aaa0-0000-1000-8000-00805f9b34fb';
 // Поилка НЕ рекламирует 0000aaa0 — в эфире у неё этот сервис и имя Petkit_CTW3UV_100.
-// Поэтому фильтровать по SVC нельзя, он виден только после подключения.
+// Фильтровать по рабочему сервису нельзя, он доступен только после подключения.
 const ADV='5b70bdd8-91bf-e789-9f4d-720508e63ebb';
 const RXU='0000aaa1-0000-1000-8000-00805f9b34fb';
 const TXU='0000aaa2-0000-1000-8000-00805f9b34fb';
 const LVL_FULL=1375, LVL_TH=1875, LVL_DRY=4095;
 const MODES={1:'постоянный',2:'умный',3:'батарейный'};
 const BANNED={73:'переинициализация ID/секрета',83:'OTA',84:'запись часов'};
+const HKEY='ctw3hist';
 
-let dev,rx,tx,seq=0,buf=new Uint8Array(0),waiters=new Map(),stream=null,lastCfg=null;
+let dev,rx,tx,seq=0,buf=new Uint8Array(0),waiters=new Map(),stream=null,lastCfg=null,lastStatus=null;
 
 const $=id=>document.getElementById(id);
 const log=(...a)=>{const t=new Date().toLocaleTimeString();
@@ -127,9 +287,11 @@ const log=(...a)=>{const t=new Date().toLocaleTimeString();
 const hex=b=>[...b].map(x=>x.toString(16).padStart(2,'0')).join(' ');
 const be=(b,o,n)=>{let v=0;for(let i=0;i<n;i++)v=v*256+b[o+i];return v;};
 const be2=v=>[(v>>8)&255,v&255];
-
+const dur=s=>{const h=Math.floor(s/3600),m=Math.round(s%3600/60);return h?`${h} ч ${m} м`:`${m} м`;};
+const durShort=s=>s<60?`${s} с`:`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
 function concat(a,b){const o=new Uint8Array(a.length+b.length);o.set(a);o.set(b,a.length);return o;}
 
+/* ================= протокол (проверен на устройстве) ================= */
 function frame(cmd,payload=[],type=1,s=null){
   if(BANNED[cmd]) throw new Error('CMD '+cmd+' запрещена: '+BANNED[cmd]);
   if(s===null){seq=seq%255+1;s=seq;}
@@ -154,7 +316,7 @@ function onData(ev){
     const f=buf.slice(0,total); buf=buf.slice(total);
     if(kind==='stream'){ onStream(f[3],f[4],f[5],f[6],f.slice(9,-1)); continue; }
     const cmd=f[3],type=f[4],s=f[5],pl=f.slice(8,-1);
-    // ACK на CMD 230 НЕ отправляем — проверено, он рвёт линк.
+    // ACK на CMD 230 НЕ отправляем — проверено, он мгновенно рвёт линк.
     if(cmd===230&&type===1){ render(decodeStatus(pl)); continue; }
     if((cmd===67||cmd===69)&&type===1&&stream){ onStreamCtl(cmd,s); continue; }
     const w=waiters.get(cmd); if(w){waiters.delete(cmd);w(pl);}
@@ -169,11 +331,6 @@ async function req(cmd,payload=[],ms=12000){
   return p;
 }
 
-function dur(sec){
-  const h=Math.floor(sec/3600), m=Math.round(sec%3600/60);
-  return h? `${h} ч ${m} м` : `${m} м`;
-}
-
 function decodeStatus(p){
   if(p.length<26)return null;
   const s={power:p[0],suspend:p[1],mode:p[2],electric:p[3],dndNow:p[4],fault:p[5],
@@ -186,35 +343,68 @@ function decodeStatus(p){
   return s;
 }
 
+/* ================= интерфейс ================= */
+function levelInfo(lvl){
+  const margin=LVL_TH-lvl;
+  const pct=Math.max(0,Math.min(100,Math.round(100*(LVL_DRY-lvl)/(LVL_DRY-LVL_FULL))));
+  if(margin<=0)  return {pct,margin,word:'нет воды',color:'var(--crit)',ink:'var(--crit-ink)'};
+  if(margin<150) return {pct,margin,word:'мало',color:'var(--warn)',ink:'var(--warn-ink)'};
+  return {pct,margin,word:'в норме',color:'var(--good)',ink:'var(--good-ink)'};
+}
+
 function render(s){
   if(!s)return;
-  $('statusCard').classList.remove('hide');
-  $('ctlCard').classList.remove('hide');
-  $('histCard').classList.remove('hide');
-  const w=$('water');
-  if(s.lack){w.textContent='НЕТ ВОДЫ';w.className='bad';}
-  else{w.textContent='в норме';w.className='ok';}
+  lastStatus=s;
+  for(const id of ['waterCard','tiles','stateCard','ctlCard','histCard'])
+    $(id).classList.remove('hide');
+
   if(s.lvl!==undefined){
-    const margin=LVL_TH-s.lvl;
-    const pct=Math.max(0,Math.min(100,Math.round(100*(LVL_DRY-s.lvl)/(LVL_DRY-LVL_FULL))));
-    $('lvlBar').style.width=pct+'%';
-    $('lvlBar').style.background=margin<=0?'var(--bad)':(margin<150?'var(--warn)':'var(--ok)');
-      $('lvl').textContent=`${s.lvl} · запас ${margin>=0?'+':''}${margin} · ${pct}%`;
-    $('lvl').className=margin<=0?'bad':(margin<150?'warn':'');
+    const L=levelInfo(s.lvl);
+    $('lvlPct').textContent=L.pct;
+    $('lvlWord').textContent=s.lack?'нет воды':L.word;
+    $('lvlWord').style.color=s.lack?'var(--crit-ink)':L.ink;
+    $('lvlDot').style.background=s.lack?'var(--crit)':L.color;
+    $('lvlBar').style.width=L.pct+'%';
+    $('lvlBar').style.background=s.lack?'var(--crit)':L.color;
+    $('lvlHint').textContent=L.margin<=0
+      ? `Датчик ${s.lvl} — ниже порога ${LVL_TH}. Защита от сухого хода глушит помпу, долейте воды.`
+      : `Датчик ${s.lvl}, запас до порога ${L.margin}. Доливать при запасе меньше 150.`;
   }
-  $('mode').textContent=`${s.mode} — ${MODES[s.mode]||'?'}`;
-  $('pwr').textContent=s.power?(s.suspend?'работает':'НА ПАУЗЕ'):'ВЫКЛЮЧЕНА';
-  $('pwr').className=s.power&&s.suspend?'ok':'warn';
-  $('pump').textContent=`${dur(s.todayRt)} сегодня · ${dur(s.pumpRt)} всего`;
-  const days=Math.ceil(Math.max(0,Math.min(s.fltPct,100))*30/100);
-  $('flt').textContent=`${s.fltPct}% (~${days} дн.)`;
-  $('bat').textContent=`${(s.supply/1000).toFixed(2)} В сеть · `
-    +`${(s.battMv/1000).toFixed(2)} В ${s.battPct}%`+(s.electric?'':' — БЕЗ СЕТИ');
-  $('flt2').textContent=`fault=${s.fault} модуль=${s.module} detect=${s.detect}`;
-  $('flt2').className=s.fault||s.module?'bad':'';
-  if(s.isLock!==undefined){
-    $('lock').textContent=s.isLock?'1 — ЗАБЛОКИРОВАНО':'0';
-    $('lock').className=s.isLock?'bad':'ok';
+
+  $('tPump').textContent=dur(s.todayRt);
+  $('tPumpSub').textContent=dur(s.pumpRt)+' всего';
+  $('tFilter').textContent=s.fltPct+'%';
+  $('tFilterSub').textContent='~'+Math.ceil(Math.max(0,Math.min(s.fltPct,100))*30/100)+' дн.';
+  $('tBatt').textContent=s.battPct+'%';
+  $('tBattSub').textContent=(s.battMv/1000).toFixed(2)+' В'+(s.electric?' · сеть':' · БЕЗ СЕТИ');
+
+  $('sMode').textContent=MODES[s.mode]||s.mode;
+  $('sRun').textContent=s.power?(s.suspend?'работает':'на паузе'):'выключена';
+  $('sVolt').textContent=(s.supply/1000).toFixed(2)+' В';
+  const bad=[]; if(s.fault)bad.push('поломка'); if(s.module)bad.push('нет модуля');
+  if(s.isLock)bad.push('isLock=1'); if(s.lowBatt)bad.push('батарея');
+  $('sDiag').textContent=bad.length?bad.join(', '):'без замечаний';
+  $('sDiag').style.color=bad.length?'var(--crit-ink)':'';
+  if(s.lamp!==undefined){
+    $('sLamp').textContent=s.lamp?('вкл, яркость '+s.bright):'выкл';
+    $('sDnd').textContent=s.dndSw?'вкл':'выкл';
+  }
+  syncSegments(s);
+}
+
+function mark(group,attr,val){
+  for(const b of $(group).querySelectorAll('button'))
+    b.setAttribute('aria-pressed', String(+b.dataset[attr]===+val));
+}
+function syncSegments(s){
+  mark('segMode','mode',s.mode);
+  mark('segPause','pause',s.suspend?0:1);
+  const inBattery=s.mode===3;
+  for(const b of $('segMode').querySelectorAll('button')) b.disabled=inBattery;
+  if(s.lamp!==undefined){
+    mark('segLamp','lamp',s.lamp);
+    mark('segBright','bright',s.bright);
+    mark('segDnd','dnd',s.dndSw);
   }
 }
 
@@ -231,7 +421,7 @@ async function readStatus(){
 
 async function readCfg(){
   const r=await req(211);
-  if(!r||r.length<12){log('CMD 211 не ответила или короткая');return null;}
+  if(!r||r.length<12){log('CMD 211 не ответила или вернула короткий ответ');return null;}
   lastCfg=r.slice(0,12);
   return {smartWork:r[0],smartSleep:r[1],battWork:be(r,2,2),battSleep:be(r,4,2),
           lamp:r[6],bright:r[7],dndSw:r[8],isLock:r[9],smartInd:r[10],battInd:r[11]};
@@ -246,12 +436,12 @@ async function writeCfg(mut,what){
                n.lamp,n.bright,n.dndSw,n.isLock,n.smartInd,n.battInd];
   if(hex(before)===hex(after)){log('изменений нет:',what);return;}
   if(!confirm(`${what}\n\nбыло:   ${hex(before)}\nстанет: ${hex(after)}\n\nОтправить?`))return;
-  log('БЭКАП конфигурации:',hex(before));
+  log('бэкап конфигурации:',hex(before));
   const r=await req(221,after);
   log('ответ CMD 221:',r?hex(r):'нет');
   if(!r||r[0]!==1){alert('Устройство не подтвердило запись');return;}
   await new Promise(r=>setTimeout(r,900));
-  const chk=await readCfg();
+  await readCfg();
   log('перечитано:',hex(lastCfg),hex(lastCfg)===hex(after)?'OK':'РАСХОЖДЕНИЕ');
   await readStatus();
 }
@@ -264,65 +454,192 @@ async function write220(power,suspend,mode,what){
   await readStatus();
 }
 
-/* ---- история питья: CMD 212 -> 80 -> поток 68/82 -> 67/69 ---- */
+/* ================= история: поток CMD 212 -> 80 -> 68/82 -> 67/69 ================= */
 function onStream(cmd,type,index,total,data){
   if(!stream||type!==3||(cmd!==68&&cmd!==82))return;
   stream.chunks.set(index,data); stream.total=total; stream.got+=data.length;
 }
 async function onStreamCtl(cmd,s){
-  if(cmd===69){ await tx.writeValueWithResponse(frame(69,[],2,s)); stream.done=true; return; }
-  const total=stream.total||32;
-  let missing=false;
-  for(let i=0;i<Math.min(total,32);i++) if(!stream.chunks.has(i)) missing=true;
-  let mask=0;
-  for(const i of stream.chunks.keys()) if(i<32) mask|=(1<<(31-i));
-  if(!missing){
-    const idx=[...stream.chunks.keys()].sort((a,b)=>a-b);
-    for(const i of idx) stream.data=concat(stream.data,stream.chunks.get(i));
-    stream.chunks=new Map();
-  }
-  mask=mask>>>0;
-  await tx.writeValueWithResponse(frame(67,[(mask>>>24)&255,(mask>>>16)&255,(mask>>>8)&255,mask&255],2,s));
+  try{
+    if(cmd===69){ await tx.writeValueWithResponse(frame(69,[],2,s)); stream.done=true; return; }
+    const total=stream.total||32;
+    let missing=false;
+    for(let i=0;i<Math.min(total,32);i++) if(!stream.chunks.has(i)) missing=true;
+    let mask=0;
+    for(const i of stream.chunks.keys()) if(i<32) mask|=(1<<(31-i));
+    if(!missing){
+      const idx=[...stream.chunks.keys()].sort((a,b)=>a-b);
+      for(const i of idx) stream.data=concat(stream.data,stream.chunks.get(i));
+      stream.chunks=new Map();
+    }
+    mask=mask>>>0;
+    await tx.writeValueWithResponse(
+      frame(67,[(mask>>>24)&255,(mask>>>16)&255,(mask>>>8)&255,mask&255],2,s));
+  }catch(e){ log('поток: подтверждение не ушло,',e.message); }
 }
+
 async function syncHistory(){
   stream={chunks:new Map(),data:new Uint8Array(0),total:0,got:0,done:false};
   const r=await req(212,[],15000);
-  if(!r||r.length<5){stream=null;log('CMD 212 не отдала размер');return;}
+  if(!r||r.length<5){stream=null;log('CMD 212 не отдала размер журнала');return;}
   const expect=be(r,1,4);
-  log(`история: ${expect} байт (${Math.floor(expect/6)} записей)`);
-  if(!expect){stream=null;$('histOut').textContent='история пуста';return;}
-  // Web Bluetooth не отдаёт согласованный MTU, поэтому заявляем консервативные 20 байт
-  // на пакет — это допустимо при любом MTU. Пакетов будет больше, но сборка кадров
-  // всё равно идёт через буфер, так что фрагментация не мешает.
+  log(`журнал поилки: ${expect} байт, ${Math.floor(expect/6)} записей`);
+  if(!expect){stream=null;drawHistory();log('новых записей нет');return;}
+  // Web Bluetooth не отдаёт MTU — заявляем консервативные 20 байт на пакет.
   const mtu=20;
   const ok=await req(80,[0,0,0,32,(mtu>>24)&255,(mtu>>16)&255,(mtu>>8)&255,mtu&255],15000);
-  if(!ok||ok[0]!==1){stream=null;log('CMD 80 не подтвердила поток');return;}
+  if(!ok||ok[0]!==1){stream=null;log('CMD 80 не подтвердила начало потока');return;}
   const t0=Date.now();
   while(!stream.done&&Date.now()-t0<120000){
     if(expect&&stream.data.length>=expect)break;
     await new Promise(r=>setTimeout(r,200));
   }
   const data=stream.data; stream=null;
-  log(`принято ${data.length} байт`);
-  const recs=[];
-  for(let i=0;i+6<=data.length;i+=6)
-    recs.push({t:new Date(be(data,i,4)*1000),stay:be(data,i+4,2)});
-  recs.sort((a,b)=>a.t-b.t);
-  const byDay=new Map();
-  for(const r of recs){
-    const d=r.t.toLocaleDateString();
-    const a=byDay.get(d)||{n:0,s:0}; a.n++; a.s+=r.stay; byDay.set(d,a);
-  }
-  let h=`<div class="row"><span class="k">Записей</span><b>${recs.length}</b></div><table>`;
-  for(const [d,a] of [...byDay].slice(-14))
-    h+=`<tr><td>${d}</td><td>${a.n} подх. · ${a.s} с</td></tr>`;
-  h+='</table><div class="k" style="margin-top:10px">Последние подходы</div><table>';
-  for(const r of recs.slice(-12))
-    h+=`<tr><td>${r.t.toLocaleString()}</td><td>${r.stay} с</td></tr>`;
-  $('histOut').innerHTML=h+'</table>';
+  const fresh=[];
+  for(let i=0;i+6<=data.length;i+=6) fresh.push({t:be(data,i,4),s:be(data,i+4,2)});
+  const added=mergeHistory(fresh);
+  log(`принято ${data.length} байт, новых записей ${added}`);
+  drawHistory();
 }
 
-/* ---- подключение ---- */
+function loadHistory(){ try{return JSON.parse(localStorage.getItem(HKEY))||[];}catch(e){return [];} }
+function mergeHistory(fresh){
+  const all=new Map(loadHistory().map(r=>[r.t,r]));
+  let added=0;
+  for(const r of fresh) if(!all.has(r.t)){all.set(r.t,r);added++;}
+  const arr=[...all.values()].sort((a,b)=>a.t-b.t);
+  localStorage.setItem(HKEY,JSON.stringify(arr));
+  return added;
+}
+
+/* ================= графики ================= */
+const tip=$('tip');
+function showTip(e,text){
+  tip.textContent=text; tip.classList.add('on');
+  tip.style.left=e.clientX+'px'; tip.style.top=e.clientY+'px';
+}
+function hideTip(){ tip.classList.remove('on'); }
+document.addEventListener('pointerup',hideTip);
+document.addEventListener('scroll',hideTip,{passive:true});
+
+function barChart(svg,bins,{label,tipText,highlightLast=false}){
+  const W=600,H=170,padL=26,padR=6,padT=16,padB=22;
+  const n=bins.length, max=Math.max(1,...bins.map(b=>b.v));
+  // «красивый» потолок, чтобы подписи оси были круглыми
+  const step=Math.max(1,Math.ceil(max/3)), top=step*3;
+  const iw=W-padL-padR, ih=H-padT-padB;
+  const band=iw/n, bw=Math.min(24,Math.max(3,band-2)); // 2px зазор между соседями
+  let g='';
+  for(let i=0;i<=3;i++){
+    const y=padT+ih-ih*i/3, val=Math.round(top*i/3);
+    g+=`<line class="gl" x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}"/>`
+      +`<text class="tick" x="${padL-6}" y="${y+3.5}" text-anchor="end">${val}</text>`;
+  }
+  const maxI=bins.reduce((m,b,i)=>b.v>bins[m].v?i:m,0);
+  bins.forEach((b,i)=>{
+    const h=b.v/top*ih, x=padL+band*i+(band-bw)/2, y=padT+ih-h;
+    if(b.v>0){
+      const r=Math.min(4,bw/2,h);
+      // 4px скругление сверху, квадрат у базовой линии
+      g+=`<path class="bar${highlightLast&&i!==n-1?' dim':''}" `
+        +`d="M${x} ${padT+ih} L${x} ${y+r} Q${x} ${y} ${x+r} ${y} `
+        +`L${x+bw-r} ${y} Q${x+bw} ${y} ${x+bw} ${y+r} L${x+bw} ${padT+ih} Z"/>`;
+    }
+    g+=`<rect x="${padL+band*i}" y="${padT}" width="${band}" height="${ih}" fill="transparent" `
+      +`data-tip="${tipText(b).replace(/"/g,'&quot;')}"/>`;
+    if(b.tick) g+=`<text class="tick" x="${padL+band*i+band/2}" y="${H-6}" `
+      +`text-anchor="middle">${b.tick}</text>`;
+  });
+  // прямая подпись только у максимума — не число на каждом столбце
+  if(bins[maxI].v>0){
+    const h=bins[maxI].v/top*ih;
+    g+=`<text class="dlab" x="${padL+band*maxI+band/2}" y="${padT+ih-h-5}" `
+      +`text-anchor="middle">${bins[maxI].v}</text>`;
+  }
+  g+=`<line class="ax" x1="${padL}" y1="${padT+ih}" x2="${W-padR}" y2="${padT+ih}"/>`;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.innerHTML=g;
+  svg.querySelectorAll('[data-tip]').forEach(el=>{
+    const show=e=>showTip(e,el.dataset.tip);
+    el.addEventListener('pointerdown',show);
+    el.addEventListener('pointermove',e=>{if(tip.classList.contains('on'))show(e);});
+    el.addEventListener('mouseenter',show);
+    el.addEventListener('mouseleave',hideTip);
+  });
+}
+
+function drawHistory(range=+(localStorage.getItem('ctw3range')||14)){
+  const recs=loadHistory();
+  const day=d=>d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'});
+  if(!recs.length){
+    $('hToday').textContent='0'; $('hWeek').textContent='0';
+    $('hWeekSub').textContent='подходов'; $('hAvg').textContent='—';
+    $('capDays').textContent='Пока нет записей — нажмите «Выгрузить из поилки»';
+    $('chDays').innerHTML=''; $('chHours').innerHTML=''; $('hTable').innerHTML='';
+    return;
+  }
+  const now=new Date(), today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  // Непрерывный ряд дней, включая пустые — иначе провалы в питье не видны.
+  // range=0 значит «всё», от первой записи до сегодня.
+  const firstDay=new Date(recs[0].t*1000);
+  const firstMid=new Date(firstDay.getFullYear(),firstDay.getMonth(),firstDay.getDate());
+  const spanAll=Math.round((today-firstMid)/864e5)+1;
+  let span=range||spanAll;
+  span=Math.max(7,Math.min(span,Math.max(spanAll,7)));
+  const weekly=span>60;                       // при длинной истории группируем по неделям
+  const buckets=weekly?Math.ceil(span/7):span;
+  const days=[];
+  for(let i=buckets-1;i>=0;i--){
+    const d=new Date(today); d.setDate(d.getDate()-i*(weekly?7:1));
+    days.push({d,v:0,stay:0});
+  }
+  let weekN=0,weekStay=0,todayN=0,totalStay=0;
+  const hours=Array.from({length:24},(_,h)=>({h,v:0}));
+  for(const r of recs){
+    const dt=new Date(r.t*1000);
+    totalStay+=r.s;
+    hours[dt.getHours()].v++;
+    const k=new Date(dt.getFullYear(),dt.getMonth(),dt.getDate()).getTime();
+    const idx=weekly
+      ? days.length-1-Math.floor((today-k)/864e5/7)
+      : days.length-1-Math.round((today-k)/864e5);
+    if(idx>=0&&idx<days.length){days[idx].v++;days[idx].stay+=r.s;}
+    if(k===today.getTime())todayN++;
+    if((today-k)/864e5<7){weekN++;weekStay+=r.s;}
+  }
+  $('hToday').textContent=todayN;
+  $('hWeek').textContent=weekN;
+  $('hWeekSub').textContent=weekStay?dur(weekStay)+' всего':'подходов';
+  $('hAvg').textContent=durShort(Math.round(totalStay/recs.length));
+  const first=new Date(recs[0].t*1000);
+  $('capDays').textContent=`${recs.length} записей с ${first.toLocaleDateString('ru-RU')}`;
+
+  const every=Math.max(1,Math.ceil(days.length/7));
+  barChart($('chDays'), days.map((x,i)=>({
+      v:x.v, stay:x.stay, d:x.d, weekly,
+      tick:((days.length-1-i)%every===0)?day(x.d):''
+    })), {
+    tipText:b=>(b.weekly
+      ? `неделя с ${b.d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'})}`
+      : b.d.toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'long'}))
+      +': '+(b.v?`${b.v} подх. · ${dur(b.stay)}`:'ни разу')
+  });
+
+  barChart($('chHours'), hours.map(x=>({
+      v:x.v, h:x.h, tick:(x.h%6===0)?String(x.h).padStart(2,'0'):''
+    })), {
+    tipText:b=>`${String(b.h).padStart(2,'0')}:00–${String(b.h).padStart(2,'0')}:59 — `
+      +(b.v?`${b.v} подх.`:'ни разу')
+  });
+
+  $('hTable').innerHTML=recs.slice(-20).reverse().map(r=>{
+    const d=new Date(r.t*1000);
+    return `<tr><td>${d.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',
+      hour:'2-digit',minute:'2-digit'})}</td><td>${durShort(r.s)}</td></tr>`;
+  }).join('');
+}
+
+/* ================= подключение ================= */
 $('key').value=localStorage.getItem('ctw3key')||'';
 
 function keyBytes(){
@@ -336,7 +653,9 @@ function keyBytes(){
 async function doConnect(device,key){
   dev=device;
   dev.addEventListener('gattserverdisconnected',()=>{
-    log('ЛИНК РАЗОРВАН'); $('connCard').classList.remove('hide'); offerReconnect();
+    log('линк разорван');
+    $('chip').textContent='нет связи';
+    $('connCard').classList.remove('hide'); offerReconnect();
   });
   const g=await dev.gatt.connect();
   const svc=await g.getPrimaryService(SVC);
@@ -348,29 +667,30 @@ async function doConnect(device,key){
   const id=await req(213,[],6000);
   if(id&&id.length>=8) log('Device ID 0x'+be(id,0,8).toString(16).toUpperCase());
   const a=await req(86,key);
-  if(!a||a[0]!==1){alert('Авторизация не прошла — проверьте ключ');log('AUTH FAIL');return;}
+  if(!a||a[0]!==1){alert('Авторизация не прошла — проверьте ключ');log('авторизация отклонена');return;}
   log('авторизация OK');
+  $('chip').textContent=dev.name||'подключено';
+  $('chip').classList.remove('hide');
   $('connCard').classList.add('hide');
   await readStatus();
+  drawHistory();
 }
 
-// Если браузер уже помнит выданное разрешение, можно переподключиться без выбора устройства.
+// Если браузер помнит выданное разрешение — переподключаемся без списка устройств.
 async function offerReconnect(){
   try{
-    if(!navigator.bluetooth||!navigator.bluetooth.getDevices) return;
+    if(!navigator.bluetooth||!navigator.bluetooth.getDevices)return;
     const known=await navigator.bluetooth.getDevices();
     const d=known.find(x=>(x.name||'').startsWith('Petkit'))||known[0];
-    if(!d) return;
+    if(!d)return;
     $('reconnect').classList.remove('hide');
     $('reconnect').onclick=async()=>{
       const key=keyBytes(); if(!key)return;
-      try{ log('переподключение к',d.name||'(сохранённое устройство)'); await doConnect(d,key); }
+      try{ log('переподключение к',d.name||'сохранённому устройству'); await doConnect(d,key); }
       catch(e){ log('ошибка:',e.message);
-                alert('Не удалось переподключиться: '+e.message+
-                      '\n\nНажмите «Подключиться к поилке» и выберите устройство.'); }
+        alert('Не удалось переподключиться: '+e.message+'\n\nНажмите «Подключиться».'); }
     };
-    log('есть сохранённое устройство — доступно переподключение без выбора');
-  }catch(e){ /* getDevices может быть не реализован — это не ошибка */ }
+  }catch(e){}
 }
 
 $('connect').onclick=async()=>{
@@ -384,9 +704,7 @@ $('connect').onclick=async()=>{
     await doConnect(d,key);
   }catch(e){ log('ошибка:',e.message); alert(e.message); }
 };
-offerReconnect();
-// Если фильтры не показывают поилку (разные браузеры по-разному читают рекламу),
-// открываем полный список и даём выбрать Petkit_CTW3UV_100 вручную.
+
 $('connectAll').onclick=async()=>{
   const key=keyBytes(); if(!key)return;
   try{
@@ -397,37 +715,66 @@ $('connectAll').onclick=async()=>{
     await doConnect(d,key);
   }catch(e){ log('ошибка:',e.message); alert(e.message); }
 };
+
+$('segRange').onclick=e=>{const b=e.target.closest('button'); if(!b)return;
+  localStorage.setItem('ctw3range',b.dataset.days);
+  for(const x of $('segRange').querySelectorAll('button'))
+    x.setAttribute('aria-pressed',String(x===b));
+  drawHistory(+b.dataset.days);
+};
 $('refresh').onclick=()=>readStatus().catch(e=>log('ошибка:',e.message));
 $('hist').onclick=()=>syncHistory().catch(e=>log('ошибка:',e.message));
 
-document.querySelectorAll('[data-act]').forEach(b=>b.onclick=async()=>{
-  const [a,v]=b.dataset.act.split(':'); const n=+v;
-  try{
-    if(a==='light')  await writeCfg(c=>c.lamp=n, n?'Подсветка включить':'Подсветка выключить');
-    if(a==='bright') await writeCfg(c=>c.bright=n, 'Яркость -> '+n);
-    if(a==='dnd')    await writeCfg(c=>c.dndSw=n, n?'Не беспокоить включить':'Не беспокоить выключить');
-    if(a==='unlock'){
-      const c=await readCfg();
-      if(!c){return;} if(!c.isLock){alert('isLock уже 0 — блокировки нет');return;}
-      await writeCfg(x=>x.isLock=0,'СНЯТЬ блокировку isLock');
-    }
-    if(a==='mode'||a==='pause'){
-      const s=await readStatus(); if(!s){alert('Статус не прочитан');return;}
-      if(a==='mode'){
-        if(s.mode===3){alert('Устройство в батарейном режиме. Это не настройка — поилка '+
-          'переходит в него сама при работе без сети. Чтобы выйти, подключите питание.');return;}
-        await write220(s.power,s.suspend,n,'Режим -> '+MODES[n]);
-      }else{
-        await write220(s.power,n?0:1,s.mode,n?'Поставить на паузу':'Снять с паузы');
-      }
-    }
-    if(a==='filter'){
-      if(!confirm('Сбросить счётчик фильтра?\n\nДелайте это только после реальной замены.'))return;
-      const r=await req(222); log('ответ CMD 222:',r?hex(r):'нет');
-      await new Promise(r=>setTimeout(r,1400)); await readStatus();
-    }
-  }catch(e){ log('ошибка:',e.message); alert(e.message); }
+const guard=fn=>async()=>{ try{ await fn(); }catch(e){ log('ошибка:',e.message); alert(e.message); } };
+
+$('segMode').onclick=e=>{const b=e.target.closest('button'); if(!b||b.disabled)return;
+  guard(async()=>{
+    const s=lastStatus||await readStatus(); if(!s)return;
+    if(s.mode===3){alert('Поилка в батарейном режиме. Это не настройка — она переходит туда '+
+      'сама при работе без сети. Чтобы выйти, подключите питание.');return;}
+    await write220(s.power,s.suspend,+b.dataset.mode,'Режим → '+MODES[+b.dataset.mode]);
+  })();
+};
+$('segPause').onclick=e=>{const b=e.target.closest('button'); if(!b)return;
+  guard(async()=>{
+    const s=lastStatus||await readStatus(); if(!s)return;
+    const pause=+b.dataset.pause;
+    await write220(s.power,pause?0:1,s.mode,pause?'Поставить на паузу':'Снять с паузы');
+  })();
+};
+$('segLamp').onclick=e=>{const b=e.target.closest('button'); if(!b)return;
+  guard(()=>writeCfg(c=>c.lamp=+b.dataset.lamp,
+    +b.dataset.lamp?'Подсветка включить':'Подсветка выключить'))();
+};
+$('segBright').onclick=e=>{const b=e.target.closest('button'); if(!b)return;
+  guard(()=>writeCfg(c=>c.bright=+b.dataset.bright,'Яркость → '+b.dataset.bright))();
+};
+$('segDnd').onclick=e=>{const b=e.target.closest('button'); if(!b)return;
+  guard(()=>writeCfg(c=>c.dndSw=+b.dataset.dnd,
+    +b.dataset.dnd?'«Не беспокоить» включить':'«Не беспокоить» выключить'))();
+};
+$('btnUnlock').onclick=guard(async()=>{
+  const c=await readCfg(); if(!c)return;
+  if(!c.isLock){alert('isLock уже 0 — блокировки нет');return;}
+  await writeCfg(x=>x.isLock=0,'Снять блокировку isLock');
 });
+$('btnFilter').onclick=guard(async()=>{
+  if(!confirm('Сбросить счётчик фильтра?\n\nДелайте это только после реальной замены.'))return;
+  const r=await req(222); log('ответ CMD 222:',r?hex(r):'нет');
+  await new Promise(r=>setTimeout(r,1400)); await readStatus();
+});
+$('btnOff').onclick=guard(async()=>{
+  const s=lastStatus||await readStatus(); if(!s)return;
+  await write220(0,s.suspend,s.mode,'ВЫКЛЮЧИТЬ поилку');
+});
+
+(function(){
+  const r=localStorage.getItem('ctw3range')||'14';
+  for(const x of $('segRange').querySelectorAll('button'))
+    x.setAttribute('aria-pressed',String(x.dataset.days===r));
+})();
+drawHistory();
+offerReconnect();
 log('готово. Введите ключ и нажмите «Подключиться».');
 </script>
 </body>
