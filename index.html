@@ -126,6 +126,10 @@ tr:last-child td{border-bottom:0}
 
 input{font:16px inherit;width:100%;padding:13px;border:1px solid var(--line);
       border-radius:12px;background:var(--bg);color:var(--ink)}
+.iv{display:flex;gap:8px;align-items:flex-end}
+.iv label{flex:1;font-size:12px;color:var(--ink2)}
+.iv input{margin-top:4px;padding:11px;text-align:center}
+.iv button{flex:0 0 auto;width:auto;padding:12px 16px}
 .note{font-size:13px;color:var(--ink2);margin:10px 0 0}
 #log{font:12px/1.55 ui-monospace,Menlo,monospace;color:var(--ink2);
      white-space:pre-wrap;word-break:break-word;max-height:190px;overflow:auto}
@@ -188,6 +192,20 @@ input{font:16px inherit;width:100%;padding:13px;border:1px solid var(--line);
     <div class="seg" id="segMode">
       <button data-mode="1">Постоянный</button>
       <button data-mode="2">Умный</button>
+    </div>
+  </div>
+  <div class="ctl"><span>Интервал умного режима, минуты</span>
+    <div class="iv">
+      <label>работа<input id="ivSmartW" type="number" inputmode="numeric" min="1" max="255"></label>
+      <label>сон<input id="ivSmartS" type="number" inputmode="numeric" min="1" max="255"></label>
+      <button class="wide" id="ivSmartSave">Задать</button>
+    </div>
+  </div>
+  <div class="ctl"><span>Интервал батарейного режима, секунды</span>
+    <div class="iv">
+      <label>работа<input id="ivBattW" type="number" inputmode="numeric" min="1" max="65535"></label>
+      <label>сон<input id="ivBattS" type="number" inputmode="numeric" min="1" max="65535"></label>
+      <button class="wide" id="ivBattSave">Задать</button>
     </div>
   </div>
   <div class="ctl"><span>Подача по датчику присутствия — в умном режиме</span>
@@ -350,7 +368,8 @@ function decodeStatus(p){
     todayRt:be(p,15,4),detect:p[19],supply:be(p,20,2),battMv:be(p,22,2),
     battPct:p[24],module:p[25]};
   if(p.length>=30)s.lvl=p[28]|(p[29]<<8);
-  if(p.length>=40){s.smartWork=p[30];s.smartSleep=p[31];s.lamp=p[36];
+  if(p.length>=40){s.smartWork=p[30];s.smartSleep=p[31];
+    s.battWork=be(p,32,2);s.battSleep=be(p,34,2);s.lamp=p[36];
     s.bright=p[37];s.dndSw=p[38];s.isLock=p[39];}
   return s;
 }
@@ -413,6 +432,9 @@ function syncSegments(s){
   mark('segPause','pause',s.suspend?0:1);
   const inBattery=s.mode===3;
   for(const b of $('segMode').querySelectorAll('button')) b.disabled=inBattery;
+  const fill=(id,v)=>{const e=$(id); if(v!==undefined&&!e.dataset.dirty)e.value=v;};
+  fill('ivSmartW',s.smartWork); fill('ivSmartS',s.smartSleep);
+  fill('ivBattW',s.battWork);   fill('ivBattS',s.battSleep);
   if(lastInd){
     mark('segIndSmart','ind',lastInd.smart);
     mark('segIndBatt','ind',lastInd.batt);
@@ -430,7 +452,8 @@ async function readStatus(){
   if(s&&(s.isLock===undefined||!lastInd)){
     const c=await readCfg();
     if(c){s.lamp=c.lamp;s.bright=c.bright;s.dndSw=c.dndSw;s.isLock=c.isLock;
-          s.smartWork=c.smartWork;s.smartSleep=c.smartSleep;}
+          s.smartWork=c.smartWork;s.smartSleep=c.smartSleep;
+          s.battWork=c.battWork;s.battSleep=c.battSleep;}
   }
   render(s); return s;
 }
@@ -772,6 +795,24 @@ $('segDnd').onclick=e=>{const b=e.target.closest('button'); if(!b)return;
   guard(()=>writeCfg(c=>c.dndSw=+b.dataset.dnd,
     +b.dataset.dnd?'«Не беспокоить» включить':'«Не беспокоить» выключить'))();
 };
+for(const id of ['ivSmartW','ivSmartS','ivBattW','ivBattS'])
+  $(id).oninput=()=>{$(id).dataset.dirty='1';};
+function ivVal(id,max,unit){
+  const v=Number($(id).value);
+  if(!Number.isInteger(v)||v<1||v>max){alert(`Значение должно быть целым, от 1 до ${max} ${unit}`);return null;}
+  return v;
+}
+function ivClean(...ids){for(const id of ids)delete $(id).dataset.dirty;}
+$('ivSmartSave').onclick=guard(async()=>{
+  const w=ivVal('ivSmartW',255,'мин'),sl=w&&ivVal('ivSmartS',255,'мин'); if(!w||!sl)return;
+  await writeCfg(c=>{c.smartWork=w;c.smartSleep=sl;},`Умный режим → ${w} мин работы / ${sl} мин сна`);
+  ivClean('ivSmartW','ivSmartS'); if(lastStatus)syncSegments(lastStatus);
+});
+$('ivBattSave').onclick=guard(async()=>{
+  const w=ivVal('ivBattW',65535,'с'),sl=w&&ivVal('ivBattS',65535,'с'); if(!w||!sl)return;
+  await writeCfg(c=>{c.battWork=w;c.battSleep=sl;},`Батарейный режим → ${w} с работы / ${sl} с сна`);
+  ivClean('ivBattW','ivBattS'); if(lastStatus)syncSegments(lastStatus);
+});
 $('segIndSmart').onclick=e=>{const b=e.target.closest('button'); if(!b)return;
   guard(()=>writeCfg(c=>c.smartInd=+b.dataset.ind,
     'Подача по датчику (умный режим) '+(+b.dataset.ind?'включить':'выключить')))();
