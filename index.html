@@ -684,22 +684,29 @@ function drawHistory(range=+(localStorage.getItem('ctw3range')||14)){
 /* ================= подключение ================= */
 $('key').value=localStorage.getItem('ctw3key')||'';
 
-function keyBytes(){
+function keyBytes(silent=false){
   const k=$('key').value.replace(/[^0-9a-fA-F]/g,'');
-  if(k.length!==16){alert('Нужно ровно 16 hex-символов (8 байт)');return null;}
+  if(k.length!==16){if(!silent)alert('Нужно ровно 16 hex-символов (8 байт)');return null;}
   localStorage.setItem('ctw3key',k);
   const key=[]; for(let i=0;i<16;i+=2)key.push(parseInt(k.substr(i,2),16));
   return key;
 }
 
+let connected=false,connecting=false;
 async function doConnect(device,key){
+  if(connecting)return; connecting=true;
+  try{ await doConnectInner(device,key); } finally{ connecting=false; }
+}
+async function doConnectInner(device,key){
   dev=device;
-  dev.addEventListener('gattserverdisconnected',()=>{
+  if(!dev._ctw3){ dev._ctw3=true; dev.addEventListener('gattserverdisconnected',()=>{
+    connected=false;
     log('линк разорван');
     $('chip').textContent='нет связи';
     $('connCard').classList.remove('hide'); offerReconnect();
-  });
-  const g=await dev.gatt.connect();
+  }); }
+  const g=await Promise.race([dev.gatt.connect(),
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error('поилка не ответила за 15 с — она рядом?')),15000))]);
   const svc=await g.getPrimaryService(SVC);
   rx=await svc.getCharacteristic(RXU); tx=await svc.getCharacteristic(TXU);
   buf=new Uint8Array(0); waiters.clear();
@@ -714,8 +721,30 @@ async function doConnect(device,key){
   $('chip').textContent=dev.name||'подключено';
   $('chip').classList.remove('hide');
   $('connCard').classList.add('hide');
+  connected=true;
   await readStatus();
   drawHistory();
+  // Поилка стирает журнал после выгрузки, поэтому забираем его сразу при каждом подключении.
+  try{ log('автовыгрузка истории…'); await syncHistory(); }
+  catch(e){ stream=null; log('автовыгрузка не удалась:',e.message); }
+}
+
+// При открытии/обновлении страницы и возврате в Bluefy — подключаемся сами,
+// если браузер помнит поилку и ключ сохранён.
+async function autoConnect(why){
+  if(connected||connecting)return;
+  const key=keyBytes(true); if(!key)return;
+  if(!navigator.bluetooth||!navigator.bluetooth.getDevices){
+    if(why==='load')log('браузер не помнит устройства между запусками — нажмите «Подключиться»');
+    return;
+  }
+  try{
+    const known=await navigator.bluetooth.getDevices();
+    const d=known.find(x=>(x.name||'').startsWith('Petkit'))||known[0];
+    if(!d){ if(why==='load')log('сохранённой поилки нет — нажмите «Подключиться» один раз'); return; }
+    log('автоподключение к',d.name||'сохранённой поилке','…');
+    await doConnect(d,key);
+  }catch(e){ log('автоподключение не удалось:',e.message,'— нажмите «Подключиться»'); }
 }
 
 // Если браузер помнит выданное разрешение — переподключаемся без списка устройств.
@@ -844,7 +873,9 @@ $('btnOff').onclick=guard(async()=>{
 })();
 drawHistory();
 offerReconnect();
-log('готово. Введите ключ и нажмите «Подключиться».');
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden)autoConnect('resume'); });
+if(keyBytes(true)) autoConnect('load');
+else log('готово. Введите ключ и нажмите «Подключиться».');
 </script>
 </body>
 </html>
