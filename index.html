@@ -190,6 +190,18 @@ input{font:16px inherit;width:100%;padding:13px;border:1px solid var(--line);
       <button data-mode="2">Умный</button>
     </div>
   </div>
+  <div class="ctl"><span>Подача по датчику присутствия — в умном режиме</span>
+    <div class="seg" id="segIndSmart">
+      <button data-ind="1">Вкл</button>
+      <button data-ind="0">Выкл</button>
+    </div>
+  </div>
+  <div class="ctl"><span>Подача по датчику присутствия — в батарейном режиме</span>
+    <div class="seg" id="segIndBatt">
+      <button data-ind="1">Вкл</button>
+      <button data-ind="0">Выкл</button>
+    </div>
+  </div>
   <div class="ctl"><span>Помпа</span>
     <div class="seg" id="segPause">
       <button data-pause="0">Работает</button>
@@ -219,9 +231,9 @@ input{font:16px inherit;width:100%;padding:13px;border:1px solid var(--line);
     <button class="wide quiet" id="btnUnlock">Снять блокировку isLock</button>
     <button class="wide quiet danger" id="btnFilter">Сбросить счётчик фильтра</button>
     <button class="wide quiet danger" id="btnOff">Выключить поилку</button>
-    <p class="note">Каждое действие показывает «было / станет» побайтово, спрашивает
-    подтверждение и проверяет результат повторным чтением. Команды 73, 83 и 84
-    не отправляются никогда.</p>
+    <p class="note">Обычные переключатели срабатывают сразу, без вопроса. Подтверждение
+    спрашивают только сброс фильтра и выключение. Каждая запись пишет «было / станет»
+    в журнал и проверяется повторным чтением. Команды 73, 83 и 84 не отправляются никогда.</p>
   </details>
 </div>
 
@@ -279,7 +291,7 @@ const MODES={1:'постоянный',2:'умный',3:'батарейный'};
 const BANNED={73:'переинициализация ID/секрета',83:'OTA',84:'запись часов'};
 const HKEY='ctw3hist';
 
-let dev,rx,tx,seq=0,buf=new Uint8Array(0),waiters=new Map(),stream=null,lastCfg=null,lastStatus=null;
+let dev,rx,tx,seq=0,buf=new Uint8Array(0),waiters=new Map(),stream=null,lastCfg=null,lastStatus=null,lastInd=null;
 
 const $=id=>document.getElementById(id);
 const log=(...a)=>{const t=new Date().toLocaleTimeString();
@@ -401,6 +413,10 @@ function syncSegments(s){
   mark('segPause','pause',s.suspend?0:1);
   const inBattery=s.mode===3;
   for(const b of $('segMode').querySelectorAll('button')) b.disabled=inBattery;
+  if(lastInd){
+    mark('segIndSmart','ind',lastInd.smart);
+    mark('segIndBatt','ind',lastInd.batt);
+  }
   if(s.lamp!==undefined){
     mark('segLamp','lamp',s.lamp);
     mark('segBright','bright',s.bright);
@@ -411,7 +427,7 @@ function syncSegments(s){
 async function readStatus(){
   const r=await req(210,[],6000);
   const s=decodeStatus(r||new Uint8Array(0));
-  if(s&&s.isLock===undefined){
+  if(s&&(s.isLock===undefined||!lastInd)){
     const c=await readCfg();
     if(c){s.lamp=c.lamp;s.bright=c.bright;s.dndSw=c.dndSw;s.isLock=c.isLock;
           s.smartWork=c.smartWork;s.smartSleep=c.smartSleep;}
@@ -423,11 +439,13 @@ async function readCfg(){
   const r=await req(211);
   if(!r||r.length<12){log('CMD 211 не ответила или вернула короткий ответ');return null;}
   lastCfg=r.slice(0,12);
+  lastInd={smart:r[10],batt:r[11]};
+  if(lastStatus)syncSegments(lastStatus);
   return {smartWork:r[0],smartSleep:r[1],battWork:be(r,2,2),battSleep:be(r,4,2),
           lamp:r[6],bright:r[7],dndSw:r[8],isLock:r[9],smartInd:r[10],battInd:r[11]};
 }
 
-async function writeCfg(mut,what){
+async function writeCfg(mut,what,ask=false){
   const c=await readCfg();
   if(!c){alert('Не удалось прочитать конфигурацию — запись отменена');return;}
   const before=Array.from(lastCfg);
@@ -435,8 +453,8 @@ async function writeCfg(mut,what){
   const after=[n.smartWork,n.smartSleep,...be2(n.battWork),...be2(n.battSleep),
                n.lamp,n.bright,n.dndSw,n.isLock,n.smartInd,n.battInd];
   if(hex(before)===hex(after)){log('изменений нет:',what);return;}
-  if(!confirm(`${what}\n\nбыло:   ${hex(before)}\nстанет: ${hex(after)}\n\nОтправить?`))return;
-  log('бэкап конфигурации:',hex(before));
+  if(ask&&!confirm(`${what}\n\nбыло:   ${hex(before)}\nстанет: ${hex(after)}\n\nВы уверены?`))return;
+  log(what+' — бэкап:',hex(before),'→',hex(after));
   const r=await req(221,after);
   log('ответ CMD 221:',r?hex(r):'нет');
   if(!r||r[0]!==1){alert('Устройство не подтвердило запись');return;}
@@ -446,8 +464,9 @@ async function writeCfg(mut,what){
   await readStatus();
 }
 
-async function write220(power,suspend,mode,what){
-  if(!confirm(`${what}\n\nCMD 220: power=${power} suspend=${suspend} mode=${mode}\n\nОтправить?`))return;
+async function write220(power,suspend,mode,what,ask=false){
+  if(ask&&!confirm(`${what}\n\nCMD 220: power=${power} suspend=${suspend} mode=${mode}\n\nВы уверены?`))return;
+  log(what+':',`CMD 220 power=${power} suspend=${suspend} mode=${mode}`);
   const r=await req(220,[power,suspend,mode]);
   log('ответ CMD 220:',r?hex(r):'нет');
   await new Promise(r=>setTimeout(r,1400));
@@ -753,19 +772,28 @@ $('segDnd').onclick=e=>{const b=e.target.closest('button'); if(!b)return;
   guard(()=>writeCfg(c=>c.dndSw=+b.dataset.dnd,
     +b.dataset.dnd?'«Не беспокоить» включить':'«Не беспокоить» выключить'))();
 };
+$('segIndSmart').onclick=e=>{const b=e.target.closest('button'); if(!b)return;
+  guard(()=>writeCfg(c=>c.smartInd=+b.dataset.ind,
+    'Подача по датчику (умный режим) '+(+b.dataset.ind?'включить':'выключить')))();
+};
+$('segIndBatt').onclick=e=>{const b=e.target.closest('button'); if(!b)return;
+  guard(()=>writeCfg(c=>c.battInd=+b.dataset.ind,
+    'Подача по датчику (батарейный режим) '+(+b.dataset.ind?'включить':'выключить')))();
+};
 $('btnUnlock').onclick=guard(async()=>{
   const c=await readCfg(); if(!c)return;
   if(!c.isLock){alert('isLock уже 0 — блокировки нет');return;}
   await writeCfg(x=>x.isLock=0,'Снять блокировку isLock');
 });
 $('btnFilter').onclick=guard(async()=>{
-  if(!confirm('Сбросить счётчик фильтра?\n\nДелайте это только после реальной замены.'))return;
+  if(!confirm('Сбросить счётчик фильтра?\n\nЭто необратимо: прежний остаток не вернуть. '+
+    'Делайте только после реальной замены.\n\nВы уверены?'))return;
   const r=await req(222); log('ответ CMD 222:',r?hex(r):'нет');
   await new Promise(r=>setTimeout(r,1400)); await readStatus();
 });
 $('btnOff').onclick=guard(async()=>{
   const s=lastStatus||await readStatus(); if(!s)return;
-  await write220(0,s.suspend,s.mode,'ВЫКЛЮЧИТЬ поилку');
+  await write220(0,s.suspend,s.mode,'ВЫКЛЮЧИТЬ поилку — вода перестанет подаваться',true);
 });
 
 (function(){
